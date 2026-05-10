@@ -1,6 +1,4 @@
 <?php
-
-
 //phpinfo();
 exit;
 
@@ -61,15 +59,15 @@ try {
     $xml = simplexml_load_string($response);
 
 
-error_log(print_r($xml,1),0);
-    
+    error_log(print_r($xml, 1), 0);
+
     if ($xml === false) throw new Exception('XML 파싱 오류');
-    
+
     $code = (string)$xml->header->code;
     $msg  = (string)$xml->header->msg;
-    
+
     echo "응답 코드: {$code}<br>응답 메시지: {$msg}<br>";
-    
+
     if ($code !== '000') {
         $errors = [
             '999' => '인증키가 유효하지 않습니다.',
@@ -81,7 +79,7 @@ error_log(print_r($xml,1),0);
         $msg = $errors[$code] ?? $msg;
         exit("오류: {$msg}");
     }
-    
+
     $total = isset($xml->header->total) ? (int)$xml->header->total : 0;
     $maxPage = isset($xml->header->max_page) ? (int)$xml->header->max_page : 1;
     $nowPage = isset($xml->header->now_page) ? (int)$xml->header->now_page : 1;
@@ -101,7 +99,7 @@ error_log(print_r($xml,1),0);
     echo '<td>시작일: <input type="date" name="startDate" value="' . (!empty($_GET['startDate']) ? $_GET['startDate'] : '') . '"></td>';
     echo '<td>종료일: <input type="date" name="endDate" value="' . (!empty($_GET['endDate']) ? $_GET['endDate'] : '') . '"></td>';
     echo '</tr>';
-    
+
     echo '<tr>';
     echo '<td>검색: <select name="searchField">';
     echo '<option value="subject"' . (!empty($_GET['searchField']) && $_GET['searchField'] == 'subject' ? ' selected' : '') . '>제목</option>';
@@ -110,7 +108,7 @@ error_log(print_r($xml,1),0);
     echo '</select></td>';
     echo '<td colspan="2"><input type="text" name="searchWord" value="' . (!empty($_GET['searchWord']) ? $_GET['searchWord'] : '') . '" style="width:80%;"></td>';
     echo '</tr>';
-    
+
     echo '<tr>';
     echo '<td>공급사: <input type="text" name="scmNo" value="' . (!empty($_GET['scmNo']) ? $_GET['scmNo'] : '') . '" style="width:50px;"></td>';
     echo '<td>공지글: <select name="notice">';
@@ -127,7 +125,7 @@ error_log(print_r($xml,1),0);
     echo '</table>';
     echo '</form>';
     echo '</div>';
-    
+
     // 게시물 목록 출력
     echo '<h2>게시물 목록</h2>';
     echo '<table border="1" style="width:100%;border-collapse:collapse;">';
@@ -135,31 +133,31 @@ error_log(print_r($xml,1),0);
 
 
 
-    
+
     // board_data 사용
     $rows = [];
     if (isset($xml->return->board_data) && count($xml->return->board_data)) {
         $rows = $xml->return->board_data;
     }
-    
+
     if (empty($rows)) {
         // echo '<tr><td colspan="7">조건에 맞는 게시물이 없습니다.</td></tr>';
     } else {
 
-// error_log(print_r($rows,1),0);
+        // error_log(print_r($rows,1),0);
 
         foreach ($rows as $item) {
 
-// error_log(print_r($item,1),0);
-// error_log($item->subject,0);
-// error_log($item->content,0);
+            // error_log(print_r($item,1),0);
+            // error_log($item->subject,0);
+            // error_log($item->content,0);
 
 
             $isSecret = isset($item->isSecret) && (string)$item->isSecret === 'y';
             $sno    = htmlspecialchars((string)$item->sno);
             $title  = htmlspecialchars((string)$item->subject);
             $title  = $isSecret ? $title . ' <span style="color:red;">[비밀글]</span>' : $title;
-            
+
             // 내용 처리 - 비밀글이어도 내용 표시
             $detail = '';
             if (isset($item->content) && !empty((string)$item->content)) {
@@ -168,12 +166,12 @@ error_log(print_r($xml,1),0);
             } else {
                 $detail = '-';
             }
-            
+
             $writer = htmlspecialchars((string)$item->writerNm);
             $mobile = htmlspecialchars((string)$item->writerMobile);
             $email  = htmlspecialchars((string)$item->writerEmail);
             $date   = htmlspecialchars((string)$item->regDt);
-            
+
             echo "<tr>";
             echo "<td>{$sno}</td>";
             echo "<td>{$title}</td>";
@@ -183,10 +181,12 @@ error_log(print_r($xml,1),0);
             echo "<td>{$email}</td>";
             echo "<td>{$date}</td>";
             echo "</tr>";
-            
+
             // 답변 정보가 있는 경우 표시
-            if (isset($item->answerSubject) && isset($item->answerContents) && 
-                !empty((string)$item->answerSubject) && !empty((string)$item->answerContents)) {
+            if (
+                isset($item->answerSubject) && isset($item->answerContents) &&
+                !empty((string)$item->answerSubject) && !empty((string)$item->answerContents)
+            ) {
                 echo '<tr>';
                 echo '<td colspan="7" style="background-color:#f0f8ff; padding:10px;">';
                 echo '<strong>답변:</strong><br>';
@@ -197,23 +197,21 @@ error_log(print_r($xml,1),0);
                 echo '</td>';
                 echo '</tr>';
             }
-            
+
             // 구분선 추가
             echo '<tr><td colspan="7" style="padding:0; height:1px; background-color:#ddd;"></td></tr>';
-
-
         }
     }
-    
+
     echo '</table>';
-    
+
     // 페이지네이션 추가
     if ($maxPage > 1) {
         echo '<div style="text-align:center; margin-top:20px;">';
-        
+
         // 현재 URL에서 페이지 파라미터만 변경하기 위한 준비
         $queryParams = $_GET;
-        
+
         // 페이지 번호 링크
         for ($i = 1; $i <= $maxPage; $i++) {
             $queryParams['page'] = $i;
@@ -223,10 +221,9 @@ error_log(print_r($xml,1),0);
                 echo "<a href='?" . http_build_query($queryParams) . "'>$i</a> ";
             }
         }
-        
+
         echo '</div>';
     }
-    
 } catch (Exception $e) {
     exit('오류 발생: ' . htmlspecialchars($e->getMessage()));
 }
@@ -303,4 +300,3 @@ curl_close($ch);
 error_log($contents, 0);
 force_download($filename, $contents);
 */
-
